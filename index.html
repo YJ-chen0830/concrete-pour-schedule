@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>混凝土澆置排程估算 | Concrete Pour Scheduling (Truck Cycle Time)</title>
+<script src="https://yj-chen0830.github.io/jrh-core/jrh-core.js?v=3" defer></script>
+<style>
+  :root{--navy:#0b1f3a;--navy2:#13284a;--gold:#c9a14a;--gold2:#e0bf6e;--bg:#f5f3ee;--ink:#1c2530;--line:#d8d2c2;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Noto Sans TC","Segoe UI",sans-serif;background:var(--bg);color:var(--ink);}
+  header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#f5f3ee;padding:28px 32px;}
+  header h1{margin:0;font-size:22px;}
+  header span{color:var(--gold2);font-size:13px;display:block;margin-top:4px;}
+  main{max-width:1060px;margin:0 auto;padding:28px 20px 60px;}
+  .grid{display:grid;grid-template-columns:340px 1fr;gap:24px;}
+  @media(max-width:820px){.grid{grid-template-columns:1fr;}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 24px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+  .card h2{font-size:14.5px;margin:0 0 18px;color:var(--navy);font-weight:700;display:flex;align-items:center;gap:8px;border-bottom:2px solid var(--gold);padding-bottom:10px;}
+  label{display:block;font-size:12px;color:#666;margin:10px 0 4px;font-weight:500;}
+  input,select{width:100%;padding:8px 11px;border:1.5px solid var(--line);border-radius:7px;font-size:13.5px;background:#fafaf8;}
+  input:focus,select:focus{outline:none;border-color:var(--gold);}
+  .sec{font-size:12px;font-weight:700;color:var(--navy);margin:16px 0 6px;border-left:4px solid var(--gold);padding-left:9px;letter-spacing:.04em;text-transform:uppercase;}
+  .note{font-size:11.5px;color:#999;margin-top:12px;line-height:1.75;background:#f9f7f2;border-radius:6px;padding:9px 12px;}
+  button.calc-btn{margin-top:16px;width:100%;padding:12px;border:none;border-radius:8px;background:var(--navy);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;}
+  button.calc-btn:hover{background:var(--navy2);}
+  button.pro-btn{margin-top:12px;width:100%;padding:12px;border:none;border-radius:8px;background:var(--gold);color:var(--navy);font-size:14.5px;font-weight:700;cursor:pointer;}
+  button.pro-btn:hover{filter:brightness(1.08);}
+  table{width:100%;border-collapse:collapse;margin-top:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  th{background:var(--navy);color:#f5f3ee;font-weight:600;font-size:12px;padding:9px 10px;text-align:left;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  td{padding:9px 10px;font-size:13px;border-bottom:1px solid var(--line);}
+  tr:nth-child(even) td{background:#f9f7f3;}
+  td:last-child{text-align:right;font-weight:700;}
+  .ok{color:#1a7d3a;font-weight:700;}.ng{color:#c0392b;font-weight:700;}
+  details.proc{margin-top:16px;border:1px solid var(--line);border-radius:8px;background:#fafaf8;overflow:hidden;}
+  details.proc summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:13px;color:var(--navy);user-select:none;list-style:none;display:flex;align-items:center;gap:6px;}
+  details.proc summary::before{content:"▶";font-size:10px;transition:transform .2s;}
+  details[open].proc summary::before{transform:rotate(90deg);}
+  details.proc pre{margin:0;padding:12px 16px 16px;font-family:"Courier New",monospace;font-size:11.5px;line-height:1.9;white-space:pre-wrap;color:#2c3e50;border-top:1px solid var(--line);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .proj-section{background:#fff;border:1px solid var(--gold);border-radius:10px;padding:18px 22px;margin-bottom:20px;}
+  .proj-section h3{margin:0 0 12px;color:var(--navy);font-size:14px;font-weight:700;}
+  .proj-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:600px){.proj-grid{grid-template-columns:1fr;}}
+  .mob-tabs{display:none;}
+  @media screen and (max-width:767px){
+    .mob-tabs{display:flex;background:var(--bg);border-bottom:2px solid var(--line);margin:0 -20px 0;padding:0 20px;}
+    .mob-tab{flex:1;padding:11px 4px;text-align:center;font-size:13.5px;font-weight:700;color:#888;cursor:pointer;background:transparent;border:none;border-bottom:3px solid transparent;}
+    .mob-tab.active{color:var(--navy);border-bottom-color:var(--gold);}
+    .grid{display:block;}
+    .grid>.card{display:none;}
+    .grid>.card.mob-active{display:block;}
+  }
+  @media print{
+    header,.no-print{display:none!important;}
+    body{background:#fff;margin:0;font-size:9pt;line-height:1.5;color:#111;}
+    main{padding:0;max-width:100%!important;}
+    .grid{grid-template-columns:1fr!important;gap:10pt!important;}
+    .card{box-shadow:none!important;border:1px solid #ccc!important;border-radius:4pt!important;padding:10pt 12pt!important;break-inside:avoid;}
+    .card h2{font-size:10.5pt!important;padding-bottom:6pt!important;margin-bottom:9pt!important;}
+    label{font-size:8pt!important;margin:6pt 0 2pt!important;}
+    .sec{font-size:8pt!important;margin:10pt 0 4pt!important;}
+    .note{font-size:7.5pt!important;padding:6pt 9pt!important;}
+    table{border:1px solid #bbb!important;border-radius:0!important;margin-top:6pt!important;}
+    th{font-size:8pt!important;padding:5pt 7pt!important;background:#0b1f3a!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    td{font-size:8.5pt!important;padding:5pt 7pt!important;}
+    tr:nth-child(even) td{background:#f5f5f5!important;}
+    details.proc{display:block!important;margin-top:10pt!important;border:1pt solid #0b1f3a!important;border-radius:4pt!important;break-inside:avoid;background:#f9f9f6!important;}
+    details.proc>summary{display:none!important;}
+    details.proc::before{content:"📋  計算過程（供第三方檢核）";display:block;font-weight:700;font-size:8pt;color:#0b1f3a;padding:6pt 10pt 4pt;border-bottom:1px solid #ccc;letter-spacing:.04em;}
+    details.proc>pre{font-size:7pt!important;line-height:1.65!important;white-space:pre-wrap!important;padding:6pt 10pt 10pt!important;color:#1a1a1a!important;font-family:"Courier New",monospace!important;}
+    .proj-section{border:1.5pt solid #0b1f3a!important;border-radius:4pt!important;}
+    button.pro-btn,button.calc-btn{display:none!important;}
+    @page{margin:15mm 12mm;size:A4;}
+  }
+</style>
+</head>
+<body data-tool="cps">
+<header>
+  <a href="https://yj-chen0830.github.io/engineering-hub/" style="color:var(--gold2);font-size:12.5px;text-decoration:none;display:inline-block;margin-bottom:8px;">← 返回工程計算中心</a>
+  <h1>混凝土澆置排程估算</h1>
+  <span>預拌車趟數與車輛調度計算 · 維持澆置不中斷</span>
+</header>
+<main>
+
+<div class="proj-section no-print" id="projSection">
+  <h3>📁 專案資訊（列印時帶入計算書封面）</h3>
+  <div class="proj-grid">
+    <div><label>工程名稱</label><input id="pj-name" placeholder="○○工程"></div>
+    <div><label>工程地點</label><input id="pj-loc" placeholder="○○市○○區"></div>
+    <div><label>承造廠商</label><input id="pj-contractor" placeholder="○○營造股份有限公司"></div>
+    <div><label>文件編號</label><input id="pj-docno" placeholder="CPS-CAL-001"></div>
+    <div><label>計算者</label><input id="pj-calc" placeholder="姓名"></div>
+    <div><label>審核者</label><input id="pj-review" placeholder="姓名"></div>
+    <div><label>計算日期</label><input id="pj-date" type="date"></div>
+  </div>
+</div>
+
+<div class="mob-tabs">
+  <button class="mob-tab active" onclick="switchMobTab('cps-in',this)">📋 輸入參數</button>
+  <button class="mob-tab" id="mobTab-cps-r" onclick="switchMobTab('cps-r',this)">📊 計算結果</button>
+</div>
+<div class="grid">
+  <div class="card mob-active" data-tab="cps-in">
+    <h2>輸入參數</h2>
+    <div class="sec">澆置與車輛條件</div>
+    <div class="row2">
+      <div><label>總澆置體積 (m³)</label><input id="cps-totalVol" type="number" value="200" step="1" min="0"></div>
+      <div><label>預拌車容量 (m³/車)</label><input id="cps-truckCap" type="number" value="6" step="0.1" min="0"></div>
+    </div>
+    <div class="row2">
+      <div><label>澆置(泵送)速率 (m³/hr)</label><input id="cps-pumpRate" type="number" value="25" step="0.1" min="0"></div>
+      <div><label>預拌車單趟循環時間（hr）</label><input id="cps-cycleTime" type="number" value="1.5" step="0.1" min="0"></div>
+    </div>
+    <button class="calc-btn" onclick="calcCps()">計算混凝土澆置排程估算</button>
+    <div class="note">本工具為理想化穩態排程估算，假設泵送速率與車輛到場間隔皆為常數，未考慮交通狀況、氣候、坍度損失、澆置面調度等實務變動因素。實際排程應保留緩衝車輛（建議額外1台備援）因應塞車、機具故障等突發狀況，並與預拌廠及泵送班確認實際供料能力是否足夠支應計算所需之泵送速率。</div>
+  </div>
+  <div class="card" data-tab="cps-r">
+    <h2>計算結果</h2>
+    <div id="cps-result"><p style="color:#888">尚未計算</p></div>
+    <details class="proc" id="cps-proc" style="display:none">
+      <summary>📋 計算過程（供第三方檢核）</summary>
+      <pre id="cps-proc-text"></pre>
+    </details>
+    <button class="pro-btn no-print" onclick="openPro()">📄 產出計算書 PDF</button>
+  </div>
+</div>
+
+</main>
+<script>
+function switchMobTab(name,btn){
+  btn.parentElement.querySelectorAll('.mob-tab').forEach(function(t){t.classList.remove('active');});
+  btn.classList.add('active');
+  btn.parentElement.nextElementSibling.querySelectorAll('.card').forEach(function(c){
+    c.classList.toggle('mob-active',c.dataset.tab===name);
+  });
+}
+function openPro(){ JRH.checkEmail(function(){ jrhPrint('混凝土澆置排程估算計算書'); }); }
+function v(id){return parseFloat(document.getElementById(id).value)||0;}
+function f1(x){return x.toFixed(1);}
+function f2(x){return x.toFixed(2);}
+function formatHoursMinutes(hours){
+  var whole=Math.floor(hours);
+  var minutes=(hours-whole)*60;
+  if(Math.abs(minutes-60)<1e-9){whole+=1;minutes=0;}
+  if(whole===0){return f1(minutes)+' 分鐘';}
+  if(minutes===0){return whole+' 小時';}
+  return whole+' 小時 '+f1(minutes)+' 分鐘';
+}
+
+function calculateConcretePourSchedule(totalVol, truckCap, pumpRate, cycleTime){
+  if(totalVol<=0 || truckCap<=0 || pumpRate<=0 || cycleTime<=0){
+    return {error:'所有輸入值均須大於 0。'};
+  }
+  var nLoads=Math.ceil(totalVol/truckCap);
+  var tPour=totalVol/pumpRate;
+  var arrivalInterval=truckCap/pumpRate;
+  var nTrucks=Math.ceil(cycleTime/arrivalInterval);
+
+  return {
+    totalVol:totalVol,
+    truckCap:truckCap,
+    pumpRate:pumpRate,
+    cycleTime:cycleTime,
+    nLoads:nLoads,
+    tPour:tPour,
+    arrivalInterval:arrivalInterval,
+    nTrucks:nTrucks
+  };
+}
+
+function calcCps(){
+  var totalVol=v('cps-totalVol');
+  var truckCap=v('cps-truckCap');
+  var pumpRate=v('cps-pumpRate');
+  var cycleTime=v('cps-cycleTime');
+  var data=calculateConcretePourSchedule(totalVol,truckCap,pumpRate,cycleTime);
+
+  if(data.error){
+    document.getElementById('cps-result').innerHTML='<p class="ng">'+data.error+'</p>';
+    document.getElementById('cps-proc').style.display='none';
+    return;
+  }
+
+  var rows=
+    '<tr><td>總車次需求 nLoads</td><td>'+data.nLoads+' 車次</td></tr>'+
+    '<tr><td>澆置總工時 tPour</td><td>'+f2(data.tPour)+' 小時（'+formatHoursMinutes(data.tPour)+'）</td></tr>'+
+    '<tr><td>車輛到場間隔 arrivalInterval</td><td>'+f2(data.arrivalInterval)+' 小時（'+f1(data.arrivalInterval*60)+' 分鐘）</td></tr>'+
+    '<tr><td>同時循環所需車輛 nTrucks</td><td>'+data.nTrucks+' 台</td></tr>';
+  document.getElementById('cps-result').innerHTML='<table><tr><th>項目</th><th>數值</th></tr>'+rows+'</table>';
+
+  var p='';
+  p+='【混凝土澆置排程估算計算過程】\n\n';
+  p+='一、輸入條件\n';
+  p+='  總澆置體積 V = '+f2(data.totalVol)+' m³\n';
+  p+='  預拌車容量 C = '+f2(data.truckCap)+' m³/車\n';
+  p+='  澆置（泵送）速率 R = '+f2(data.pumpRate)+' m³/hr\n';
+  p+='  預拌車單趟循環時間 Tc = '+f2(data.cycleTime)+' hr\n\n';
+  p+='二、總車次需求\n';
+  p+='  nLoads = ceil(V / C)\n';
+  p+='         = ceil('+f2(data.totalVol)+' / '+f2(data.truckCap)+')\n';
+  p+='         = ceil('+(data.totalVol/data.truckCap).toFixed(3)+') = '+data.nLoads+' 車次\n\n';
+  p+='三、澆置總工時\n';
+  p+='  tPour = V / R\n';
+  p+='        = '+f2(data.totalVol)+' / '+f2(data.pumpRate)+'\n';
+  p+='        = '+f2(data.tPour)+' hr（'+formatHoursMinutes(data.tPour)+'）\n\n';
+  p+='四、車輛到場間隔\n';
+  p+='  arrivalInterval = C / R\n';
+  p+='                  = '+f2(data.truckCap)+' / '+f2(data.pumpRate)+'\n';
+  p+='                  = '+f2(data.arrivalInterval)+' hr = '+f1(data.arrivalInterval*60)+' 分鐘/車\n\n';
+  p+='五、同時循環所需車輛數\n';
+  p+='  nTrucks = ceil(Tc / arrivalInterval)\n';
+  p+='          = ceil('+f2(data.cycleTime)+' / '+f2(data.arrivalInterval)+')\n';
+  p+='          = ceil('+(data.cycleTime/data.arrivalInterval).toFixed(3)+') = '+data.nTrucks+' 台\n\n';
+  p+='六、排程說明\n';
+  p+='  上述 nTrucks 代表須同時投入循環之最低車輛數，方能在理想穩態下每隔 '+f1(data.arrivalInterval*60)+' 分鐘有 1 車到場，\n';
+  p+='  以維持泵送作業不中斷。實務上宜再加派 1 台備援車，以吸收交通、等待或機具異常造成之延誤。\n';
+  document.getElementById('cps-proc-text').textContent=p;
+  document.getElementById('cps-proc').style.display='';
+  if(window.innerWidth<768){var b=document.getElementById('mobTab-cps-r');if(b)switchMobTab('cps-r',b);}
+  return data;
+}
+
+window.addEventListener('DOMContentLoaded',function(){
+  calcCps();
+});
+</script>
+<script>
+window.jrhDocMeta={
+ "doc": "混凝土澆置排程估算計算書",
+ "codes": [
+  "混凝土澆置排程估算（Ready-Mix Truck Dispatch Scheduling）— 工程管理常用排程法"
+ ],
+ "notes": [
+  "本工具假設泵送速率與預拌車到場間隔為理想常數，實務上應保留緩衝時間及備援車輛因應交通、氣候、機具故障等變動因素",
+  "坍度損失（Slump Loss）與澆置面等待時間過長可能影響混凝土品質，長距離運送或高溫環境應另行評估摻加緩凝劑或縮短循環時間",
+  "本計算書應經工地主任或專案經理確認後，作為預拌廠訂車及澆置排程規劃參考。"
+ ]
+};
+</script>
+</body>
+</html>
